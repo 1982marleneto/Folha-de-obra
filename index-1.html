@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Folha de Obra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0F1117; --surface: #1C1F2A; --border: #2A2D3E;
+    --text: #E8E9ED; --muted: #6B7280; --dim: #4B5563;
+    --orange: #F97316; --orange-dark: #EA580C;
+    --green: #10B981; --green-bg: #065F46;
+    --blue: #3B82F6; --blue-light: #60A5FA;
+    --red: #F87171; --red-bg: #7F1D1D;
+    --yellow: #FCD34D; --yellow-bg: #78350F;
+    --purple: #A78BFA; --purple-bg: #3B0764;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
+  #app { height: 100vh; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
+
+  .header { background: linear-gradient(135deg,#1C1F2A,#151720); padding: 14px 16px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; gap: 10px; }
+  .back-btn { background: var(--border); border: none; color: var(--text); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+  .header-title { font-weight: 700; font-size: 17px; background: linear-gradient(90deg,#F97316,#FB923C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .new-btn { background: linear-gradient(135deg,var(--orange),var(--orange-dark)); border: none; color: #fff; border-radius: 10px; padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer; margin-left: auto; flex-shrink: 0; font-family: 'DM Sans',sans-serif; }
+
+  .bottom-nav { display: flex; background: #151720; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .nav-btn { flex: 1; background: none; border: none; color: var(--dim); padding: 10px 4px 8px; font-size: 10px; font-weight: 600; cursor: pointer; font-family: 'DM Sans',sans-serif; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .nav-btn .nav-icon { font-size: 20px; }
+  .nav-btn.active { color: var(--orange); }
+
+  .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { background: none; border: none; color: var(--muted); padding: 11px 13px; font-size: 12px; font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap; cursor: pointer; font-family: 'DM Sans',sans-serif; flex-shrink: 0; }
+  .tab.active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 700; }
+
+  .content { flex: 1; overflow-y: auto; padding: 14px 14px 20px; -webkit-overflow-scrolling: touch; }
+  .content::-webkit-scrollbar { width: 3px; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 10px; -webkit-tap-highlight-color: transparent; }
+  .card.clickable { cursor: pointer; transition: transform 0.1s; }
+  .card.clickable:active { transform: scale(0.98); }
+  .card.green { border-color: var(--green-bg); }
+  .card.blue { border-color: #1E3A5F; }
+  .card.archived { opacity: 0.65; }
+  .card.urgente { border-color: var(--red-bg); }
+  .card.hoje { border-color: var(--yellow-bg); }
+
+  .section { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .section-title { font-size: 11px; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+
+  input, textarea, select { background: #151720; border: 1.5px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 13px; font-family: 'DM Sans',sans-serif; font-size: 14px; width: 100%; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+  input:focus, textarea:focus, select:focus { border-color: var(--orange); }
+  textarea { resize: vertical; min-height: 70px; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7280' d='M1 1l5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  select option { background: #1C1F2A; }
+  ::placeholder { color: var(--dim); }
+  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; font-weight: 500; }
+  .field { margin-bottom: 10px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn-primary { background: linear-gradient(135deg,var(--orange),var(--orange-dark)); border: none; color: #fff; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; font-family: 'DM Sans',sans-serif; }
+  .btn-add-inline { background: linear-gradient(135deg,var(--orange),var(--orange-dark)); border: none; color: #fff; border-radius: 10px; width: 44px; height: 44px; font-size: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .btn-danger { background: #2D1515; border: 1.5px solid var(--red-bg); color: var(--red); border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer; font-family: 'DM Sans',sans-serif; margin-top: 8px; }
+  .btn-remove { background: none; border: none; color: var(--dim); font-size: 20px; cursor: pointer; flex-shrink: 0; line-height: 1; padding: 2px 4px; }
+  .btn-check { flex: 1; border-radius: 8px; padding: 7px 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans',sans-serif; border: 1.5px solid var(--border); background: var(--bg); color: var(--muted); }
+  .btn-check.orange-on { border-color: var(--orange); background: rgba(249,115,22,.1); color: var(--orange); }
+  .btn-check.green-on { border-color: var(--green); background: rgba(16,185,129,.1); color: var(--green); }
+  .btn-confirm { width: 100%; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans',sans-serif; margin-top: 10px; border: 1.5px solid var(--border); background: #1C2533; color: var(--muted); }
+  .btn-confirm.on { border-color: var(--blue); background: #1E3A5F; color: var(--blue-light); }
+  .btn-email { width: 100%; border-radius: 10px; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans',sans-serif; margin-top: 4px; border: 1.5px solid #1E3A5F; background: #0D1F35; color: var(--blue-light); display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-archive { width: 100%; border-radius: 10px; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans',sans-serif; margin-top: 8px; border: 1.5px solid var(--purple-bg); background: #1A0F2E; color: var(--purple); }
+
+  .progress-bar { background: var(--bg); border-radius: 8px; height: 6px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; border-radius: 8px; transition: width .4s; background: linear-gradient(90deg,var(--orange),#FB923C); }
+  .progress-fill.done { background: var(--green); }
+  .progress-label { font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+  .badge { background: #1E293B; color: #94A3B8; border-radius: 6px; padding: 3px 8px; font-size: 11px; display: inline-block; margin: 2px 4px 2px 0; }
+  .valor-badge { background: #0D2218; color: var(--green); border-radius: 8px; padding: 4px 10px; font-size: 13px; font-weight: 700; font-family: 'DM Mono',monospace; flex-shrink: 0; margin-left: 10px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .flex1 { flex: 1; min-width: 0; }
+  .empty { text-align: center; padding: 30px 20px; color: var(--dim); font-size: 13px; }
+  .empty-big { text-align: center; padding: 50px 20px; color: var(--dim); }
+  .empty-big .icon { font-size: 48px; margin-bottom: 14px; }
+  .empty-big .title { font-size: 16px; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
+  .check-box { width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--dim); background: transparent; color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .check-box.checked { border-color: var(--green); background: var(--green); }
+  .step-num { font-size: 11px; color: var(--dim); font-family: 'DM Mono',monospace; padding-top: 2px; flex-shrink: 0; }
+  .step-text { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .step-text.done { color: #6EE7B7; text-decoration: line-through; }
+  .warn-box { background: #1A1508; border: 1.5px solid var(--yellow-bg); border-radius: 10px; padding: 12px; font-size: 12px; color: var(--yellow); margin-bottom: 12px; }
+  .info-box { background: #0D1F35; border: 1.5px solid #1E3A5F; border-radius: 10px; padding: 12px; font-size: 12px; color: var(--blue-light); margin-bottom: 12px; }
+  .client-item { font-size: 14px; flex: 1; }
+  .client-item.done { color: #6EE7B7; text-decoration: line-through; }
+  a { color: var(--blue-light); text-decoration: none; }
+  .forn-detail { font-size: 12px; color: #94A3B8; margin-bottom: 2px; }
+  .search-box { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .search-box input { background: none; border: none; padding: 0; font-size: 14px; }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-btn { background: var(--surface); border: 1.5px solid var(--border); color: var(--muted); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: 'DM Sans',sans-serif; flex-shrink: 0; }
+  .filter-btn.active { border-color: var(--orange); background: rgba(249,115,22,.1); color: var(--orange); }
+  .alerta-card { background: rgba(248,113,113,.07); border: 1.5px solid var(--red-bg); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header" id="header"></div>
+  <div class="tabs" id="tabs" style="display:none"></div>
+  <div class="content" id="content"></div>
+  <div class="bottom-nav" id="bottom-nav"></div>
+</div>
+<script>
+const STORAGE_KEY='folha_obra_v2';
+let state={pagina:'obras',vista:'lista',obraId:null,tab:'info',pesquisa:'',filtro:'todas',obras:[]};
+
+function loadFromStorage(){
+  try{
+    const s=localStorage.getItem(STORAGE_KEY);
+    if(s){state.obras=JSON.parse(s).obras||[];}
+    // migrar v1
+    if(!state.obras.length){
+      const old=localStorage.getItem('folha_obra_v1');
+      if(old){state.obras=(JSON.parse(old).obras||[]).map(o=>({...o,arquivada:false,lembretes:[]}));saveToStorage();}
+    }
+  }catch(e){}
+}
+function saveToStorage(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({obras:state.obras}));}catch(e){}}
+function getObra(){return state.obras.find(o=>o.id===state.obraId)||null;}
+function updateObra(f){state.obras=state.obras.map(o=>o.id===state.obraId?{...o,...f}:o);saveToStorage();render();}
+function calcProgress(o){if(!o.passos?.length)return 0;return Math.round(o.passos.filter(p=>p.status==='concluído').length/o.passos.length*100);}
+function diasPara(d){if(!d)return null;const h=new Date();h.setHours(0,0,0,0);return Math.round((new Date(d+'T12:00:00')-h)/86400000);}
+
+function getLembretesAtivos(){
+  const r=[];
+  state.obras.filter(o=>!o.arquivada).forEach(o=>{
+    (o.lembretes||[]).forEach(l=>{const d=diasPara(l.data);if(d!==null&&d<=7)r.push({...l,obraId:o.id,cliente:o.cliente,dias:d});});
+    const di=diasPara(o.dataInicio);
+    if(di!==null&&di<=3&&di>=0){
+      const ne=(o.materiais||[]).filter(m=>!m.encomendado);
+      if(ne.length)r.push({id:'auto_'+o.id,texto:ne.length+' material(is) por encomendar',obraId:o.id,cliente:o.cliente,dias:di,auto:true});
+    }
+  });
+  return r.sort((a,b)=>a.dias-b.dias);
+}
+
+// ── RENDER ───────────────────────────────────────────────
+function render(){renderHeader();renderTabs();renderContent();renderBottomNav();}
+
+function renderHeader(){
+  const obra=getObra();
+  const prog=obra?calcProgress(obra):0;
+  const lems=getLembretesAtivos();
+  const urgentes=lems.filter(l=>l.dias<=0).length;
+  document.getElementById('header').innerHTML=`
+    <div class="header-row">
+      ${state.vista==='obra'?`<button class="back-btn" onclick="goLista()">←</button>`:''}
+      <div class="flex1">
+        <div class="header-title">🏗️ Folha de Obra</div>
+        ${state.vista==='obra'&&obra?`<div class="header-sub">${esc(obra.cliente||'Novo cliente')} · ${prog}%${obra.arquivada?' · 📁 Arquivo':''}</div>`:''}
+        ${state.vista==='lista'&&state.pagina==='obras'?`<div class="header-sub">${state.obras.filter(o=>!o.arquivada).length} obras ativas</div>`:''}
+      </div>
+      ${state.vista==='lista'&&state.pagina==='obras'?`<button class="new-btn" onclick="novaObra()">+ Nova</button>`:''}
+      ${urgentes>0&&state.vista==='lista'?`<div style="background:var(--red);color:#fff;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;flex-shrink:0">🔔${urgentes}</div>`:''}
+    </div>`;
+}
+
+function renderBottomNav(){
+  const nav=document.getElementById('bottom-nav');
+  if(state.vista==='obra'){nav.style.display='none';return;}
+  nav.style.display='flex';
+  const lems=getLembretesAtivos();
+  const badge=lems.length?`<span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 5px;font-size:10px;margin-left:2px">${lems.length}</span>`:'';
+  nav.innerHTML=[
+    {id:'obras',icon:'🏗️',label:'Obras',b:''},
+    {id:'lembretes',icon:'🔔',label:'Lembretes',b:badge},
+    {id:'arquivo',icon:'📁',label:'Arquivo',b:''},
+  ].map(n=>`<button class="nav-btn ${state.pagina===n.id?'active':''}" onclick="setPagina('${n.id}')"><span class="nav-icon">${n.icon}</span>${n.label}${n.b}</button>`).join('');
+}
+
+function renderTabs(){
+  const el=document.getElementById('tabs');
+  if(state.vista!=='obra'){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=[
+    {id:'info',l:'📋 Info'},{id:'passos',l:'🔧 Passos'},{id:'materiais',l:'📦 Material'},
+    {id:'fornecedores',l:'🚛 Fornec.'},{id:'cliente',l:'👤 Cliente'},{id:'lembretes_obra',l:'🔔 Lembretes'},
+  ].map(t=>`<button class="tab ${state.tab===t.id?'active':''}" onclick="setTab('${t.id}')">${t.l}</button>`).join('');
+}
+
+function renderContent(){
+  const el=document.getElementById('content');
+  if(state.vista==='obra'){
+    const obra=getObra();if(!obra){goLista();return;}
+    const map={info:renderInfo,passos:renderPassos,materiais:renderMateriais,fornecedores:renderFornecedores,cliente:renderCliente,lembretes_obra:renderLembretesObra};
+    el.innerHTML=(map[state.tab]||renderInfo)(obra);return;
+  }
+  if(state.pagina==='obras'){el.innerHTML=renderLista();return;}
+  if(state.pagina==='lembretes'){el.innerHTML=renderPaginaLembretes();return;}
+  if(state.pagina==='arquivo'){el.innerHTML=renderArquivo();return;}
+}
+
+// ── PÁGINAS ──────────────────────────────────────────────
+function renderLista(){
+  const lems=getLembretesAtivos();
+  let obras=state.obras.filter(o=>!o.arquivada);
+  if(state.pesquisa){const q=state.pesquisa.toLowerCase();obras=obras.filter(o=>(o.cliente||'').toLowerCase().includes(q)||(o.morada||'').toLowerCase().includes(q)||(o.descricaoObra||'').toLowerCase().includes(q));}
+  if(state.filtro==='ativas')obras=obras.filter(o=>calcProgress(o)<100);
+  if(state.filtro==='concluidas')obras=obras.filter(o=>calcProgress(o)===100);
+
+  const alertas=lems.filter(l=>l.dias<=1).slice(0,3).map(l=>`
+    <div class="alerta-card" onclick="abrirObra(${l.obraId});setTab('lembretes_obra')">
+      <div class="row"><div class="flex1">
+        <div style="font-size:11px;font-weight:700;color:var(--red)">${l.dias<0?'ATRASADO':l.dias===0?'HOJE':'AMANHÃ'}${l.auto?' · automático':''}</div>
+        <div style="font-size:13px;font-weight:600;margin-top:2px">${esc(l.texto)}</div>
+        <div style="font-size:11px;color:var(--muted)">${esc(l.cliente||'')}</div>
+      </div><span style="color:var(--dim);font-size:18px">›</span></div>
+    </div>`).join('');
+
+  const cards=obras.length?obras.map(o=>{
+    const prog=calcProgress(o);
+    const oLems=getLembretesAtivos().filter(l=>l.obraId===o.id);
+    return `<div class="card clickable" onclick="abrirObra(${o.id})">
+      <div class="row" style="align-items:flex-start;margin-bottom:8px">
+        <div class="flex1">
+          <div style="font-weight:700;font-size:15px;margin-bottom:3px">${esc(o.cliente||'Sem nome')}${oLems.length?` <span style="font-size:11px;color:var(--red)">🔔${oLems.length}</span>`:''}</div>
+          <div style="font-size:12px;color:var(--muted)">${esc(o.morada||'Sem morada')}${o.dataInicio?' · '+fmtDate(o.dataInicio):''}</div>
+        </div>
+        ${o.valorAcordado?`<div class="valor-badge">€${esc(o.valorAcordado)}</div>`:''}
+      </div>
+      <div style="margin-bottom:8px">
+        ${o.passos?.length?`<span class="badge">${o.passos.filter(p=>p.status==='concluído').length}/${o.passos.length} passos</span>`:''}
+        ${o.materiais?.length?`<span class="badge">${o.materiais.filter(m=>m.recebido).length}/${o.materiais.length} materiais</span>`:''}
+        ${o.fornecedores?.length?`<span class="badge">${o.fornecedores.length} fornec.</span>`:''}
+        ${prog===100?`<span class="badge" style="background:rgba(16,185,129,.15);color:var(--green)">✅ Concluída</span>`:''}
+      </div>
+      <div class="progress-bar"><div class="progress-fill ${prog===100?'done':''}" style="width:${prog}%"></div></div>
+      <div class="progress-label">${prog}% concluído</div>
+    </div>`}).join(''):`<div class="empty">${state.pesquisa?'Nenhuma obra encontrada':'Sem obras ativas'}</div>`;
+
+  return `
+    <div class="search-box">
+      <span style="font-size:16px;color:var(--dim)">🔍</span>
+      <input placeholder="Pesquisar cliente, morada..." value="${esc(state.pesquisa)}" oninput="setPesquisa(this.value)">
+      ${state.pesquisa?`<button onclick="setPesquisa('')" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;flex-shrink:0">×</button>`:''}
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn ${state.filtro==='todas'?'active':''}" onclick="setFiltro('todas')">Todas</button>
+      <button class="filter-btn ${state.filtro==='ativas'?'active':''}" onclick="setFiltro('ativas')">Em curso</button>
+      <button class="filter-btn ${state.filtro==='concluidas'?'active':''}" onclick="setFiltro('concluidas')">Concluídas</button>
+    </div>
+    ${alertas}${cards}`;
+}
+
+function renderPaginaLembretes(){
+  const lems=getLembretesAtivos();
+  if(!lems.length)return`
+    <div class="info-box">💡 Aparecem aqui lembretes dos próximos 7 dias. Adiciona lembretes dentro de cada obra no separador 🔔</div>
+    <div class="empty-big"><div class="icon">🔔</div><div class="title">Tudo em dia!</div><div>Sem lembretes próximos</div></div>`;
+  return`
+    <div class="info-box">🔔 Lembretes dos próximos 7 dias em todas as obras</div>
+    ${lems.map(l=>{
+      const cor=l.dias<0?'var(--red)':l.dias===0?'var(--yellow)':'var(--blue-light)';
+      const label=l.dias<0?Math.abs(l.dias)+'d atrasado':l.dias===0?'Hoje':l.dias===1?'Amanhã':l.dias+'d';
+      return`<div class="card clickable ${l.dias<=0?'urgente':l.dias<=1?'hoje':''}" onclick="abrirObra(${l.obraId});setTab('lembretes_obra')">
+        <div class="row"><div class="flex1">
+          <div style="font-size:12px;font-weight:700;color:${cor};margin-bottom:3px">${label}${l.auto?' 🤖 automático':''}</div>
+          <div style="font-size:14px;font-weight:600">${esc(l.texto)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">📍 ${esc(l.cliente||'sem nome')}</div>
+        </div><span style="color:var(--dim);font-size:18px">›</span></div>
+      </div>`;}).join('')}`;
+}
+
+function renderArquivo(){
+  let obras=state.obras.filter(o=>o.arquivada);
+  if(state.pesquisa){const q=state.pesquisa.toLowerCase();obras=obras.filter(o=>(o.cliente||'').toLowerCase().includes(q)||(o.morada||'').toLowerCase().includes(q));}
+  return`
+    <div class="search-box">
+      <span style="font-size:16px;color:var(--dim)">🔍</span>
+      <input placeholder="Pesquisar arquivo..." value="${esc(state.pesquisa)}" oninput="setPesquisa(this.value)">
+      ${state.pesquisa?`<button onclick="setPesquisa('')" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;flex-shrink:0">×</button>`:''}
+    </div>
+    ${!obras.length?`<div class="empty-big"><div class="icon">📁</div><div class="title">Arquivo vazio</div><div>Arquiva obras concluídas para as guardar aqui</div></div>`:''}
+    ${obras.map(o=>`<div class="card clickable archived" onclick="abrirObra(${o.id})">
+      <div class="row" style="align-items:flex-start">
+        <div class="flex1">
+          <div style="font-weight:700;font-size:15px;margin-bottom:3px">${esc(o.cliente||'Sem nome')} <span class="badge" style="background:rgba(167,139,250,.15);color:var(--purple)">📁 Arquivo</span></div>
+          <div style="font-size:12px;color:var(--muted)">${esc(o.morada||'')}${o.dataFim?' · Fim: '+fmtDate(o.dataFim):''}</div>
+        </div>
+        ${o.valorAcordado?`<div class="valor-badge">€${esc(o.valorAcordado)}</div>`:''}
+      </div>
+    </div>`).join('')}`;
+}
+
+// ── OBRA TABS ────────────────────────────────────────────
+function renderInfo(obra){return`
+  <div class="section"><div class="section-title">Cliente</div>
+    <div class="field"><label>Nome do Cliente</label><input value="${esc(obra.cliente)}" oninput="fieldUpdate('cliente',this.value)" placeholder="Nome completo"></div>
+    <div class="field"><label>Morada da Obra</label><input value="${esc(obra.morada)}" oninput="fieldUpdate('morada',this.value)" placeholder="Rua, nº, localidade"></div>
+    <div class="field"><label>Telefone</label><input type="tel" value="${esc(obra.telefone)}" oninput="fieldUpdate('telefone',this.value)" placeholder="+351 9xx xxx xxx"></div>
+  </div>
+  <div class="section"><div class="section-title">Datas</div>
+    <div class="grid2">
+      <div class="field"><label>Início</label><input type="date" value="${esc(obra.dataInicio)}" oninput="fieldUpdate('dataInicio',this.value)"></div>
+      <div class="field"><label>Fim Previsto</label><input type="date" value="${esc(obra.dataFim)}" oninput="fieldUpdate('dataFim',this.value)"></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title">Valores</div>
+    <div class="field"><label>Valor Acordado (€)</label><input type="number" inputmode="decimal" value="${esc(obra.valorAcordado)}" oninput="fieldUpdate('valorAcordado',this.value)" placeholder="0.00"></div>
+  </div>
+  <div class="section"><div class="section-title">Descrição da Obra</div>
+    <textarea oninput="fieldUpdate('descricaoObra',this.value)" placeholder="Descreve o trabalho a realizar...">${esc(obra.descricaoObra)}</textarea>
+  </div>
+  <div class="section"><div class="section-title">Notas Gerais</div>
+    <textarea oninput="fieldUpdate('notas',this.value)" placeholder="Observações, condições especiais...">${esc(obra.notas)}</textarea>
+  </div>
+  ${!obra.arquivada
+    ?`<button class="btn-archive" onclick="arquivarObra()">📁 Arquivar Obra Concluída</button>`
+    :`<button class="btn-archive" onclick="desarquivarObra()">↩️ Restaurar para Obras Ativas</button>`}
+  <button class="btn-danger" onclick="apagarObra()">🗑️ Apagar Obra</button>`;}
+
+function renderPassos(obra){
+  const ps=obra.passos||[];
+  return`
+  <div class="row" style="margin-bottom:12px">
+    <input id="inp-passo" placeholder="Adicionar passo da obra..." onkeydown="if(event.key==='Enter')addPasso()">
+    <button class="btn-add-inline" onclick="addPasso()">+</button>
+  </div>
+  ${!ps.length?'<div class="empty">Sem passos definidos</div>':''}
+  ${ps.map((p,i)=>`<div class="card ${p.status==='concluído'?'green':''}">
+    <div class="row" style="align-items:flex-start">
+      <span class="step-num">#${i+1}</span>
+      <div class="flex1">
+        <div class="step-text ${p.status==='concluído'?'done':''}">${esc(p.texto)}</div>
+        <select onchange="passoUpdate(${p.id},'status',this.value)" style="margin-bottom:8px;font-size:13px">
+          <option value="pendente" ${p.status==='pendente'?'selected':''}>⏳ Pendente</option>
+          <option value="em curso" ${p.status==='em curso'?'selected':''}>🔧 Em curso</option>
+          <option value="concluído" ${p.status==='concluído'?'selected':''}>✅ Concluído</option>
+        </select>
+        <textarea oninput="passoUpdate(${p.id},'notas',this.value)" placeholder="Notas..." style="font-size:13px;min-height:50px">${esc(p.notas||'')}</textarea>
+      </div>
+      <button class="btn-remove" onclick="removerPasso(${p.id})">×</button>
+    </div>
+  </div>`).join('')}`;}
+
+function renderMateriais(obra){
+  const ms=obra.materiais||[];
+  return`
+  <div class="section"><div class="section-title">Adicionar Material</div>
+    <div class="field"><input id="inp-mat" placeholder="Nome do material"></div>
+    <div class="grid2" style="margin-bottom:10px">
+      <input id="inp-qtd" placeholder="Quantidade" type="number" inputmode="decimal">
+      <input id="inp-un" placeholder="Un. (m², kg, un...)">
+    </div>
+    <button class="btn-primary" onclick="addMaterial()">+ Adicionar</button>
+  </div>
+  ${ms.length?`<button class="btn-email" onclick="emailMateriais()">✉️ Enviar Lista de Encomenda por Email</button><div style="margin-bottom:10px"></div>`:''}
+  ${!ms.length?'<div class="empty">Sem materiais adicionados</div>':''}
+  ${ms.map(m=>`<div class="card ${m.recebido?'green':''}">
+    <div class="row" style="align-items:flex-start;margin-bottom:10px">
+      <div class="flex1">
+        <div style="font-weight:600;font-size:14px;color:${m.recebido?'#6EE7B7':'var(--text)'}">${esc(m.nome)}</div>
+        ${m.quantidade?`<div style="font-size:12px;color:var(--muted)">${esc(m.quantidade)} ${esc(m.unidade)}</div>`:''}
+      </div>
+      <button class="btn-remove" onclick="removerMaterial(${m.id})">×</button>
+    </div>
+    <div class="row">
+      <button class="btn-check ${m.encomendado?'orange-on':''}" onclick="toggleMaterial(${m.id},'encomendado')">${m.encomendado?'✓ ':''}Encomendado</button>
+      <button class="btn-check ${m.recebido?'green-on':''}" onclick="toggleMaterial(${m.id},'recebido')">${m.recebido?'✓ ':''}Recebido</button>
+    </div>
+  </div>`).join('')}`;}
+
+function renderFornecedores(obra){
+  const fs=obra.fornecedores||[];
+  return`
+  <div class="section"><div class="section-title">Adicionar Fornecedor / Máquina</div>
+    <div class="field"><input id="inp-forn" placeholder="Nome do fornecedor / empresa"></div>
+    <div class="field"><input id="inp-serv" placeholder="Serviço / máquina (ex: grua, betoneira)"></div>
+    <div class="field"><input id="inp-cont" type="tel" placeholder="Telefone de contacto"></div>
+    <div class="field"><label>Data de Presença</label><input id="inp-data" type="date"></div>
+    <button class="btn-primary" onclick="addFornecedor()">+ Adicionar</button>
+  </div>
+  ${fs.length?`<button class="btn-email" onclick="emailFornecedores()">✉️ Enviar Confirmação por Email</button><div style="margin-bottom:10px"></div>`:''}
+  ${!fs.length?'<div class="empty">Sem fornecedores adicionados</div>':''}
+  ${fs.map(f=>`<div class="card ${f.confirmado?'blue':''}">
+    <div class="row" style="align-items:flex-start">
+      <div class="flex1">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">${esc(f.nome)}</div>
+        ${f.servico?`<div class="forn-detail">🔧 ${esc(f.servico)}</div>`:''}
+        ${f.contacto?`<a href="tel:${esc(f.contacto)}" class="forn-detail" style="color:var(--blue-light);display:block">📞 ${esc(f.contacto)}</a>`:''}
+        ${f.dataPresenca?`<div class="forn-detail">📅 ${fmtDate(f.dataPresenca)}</div>`:''}
+      </div>
+      <button class="btn-remove" onclick="removerFornecedor(${f.id})">×</button>
+    </div>
+    <button class="btn-confirm ${f.confirmado?'on':''}" onclick="toggleFornecedor(${f.id})">${f.confirmado?'✅ Confirmado':'Confirmar Presença'}</button>
+  </div>`).join('')}`;}
+
+function renderCliente(obra){
+  const its=obra.clienteAssegurar||[];
+  return`
+  <div class="warn-box">⚠️ Lista do que o cliente tem de assegurar antes ou durante a obra</div>
+  ${its.length?`<button class="btn-email" onclick="emailCliente()" style="margin-bottom:12px">✉️ Enviar Checklist ao Cliente</button>`:''}
+  <div class="row" style="margin-bottom:12px">
+    <input id="inp-cli" placeholder="Ex: Acesso à água, licença, elevador..." onkeydown="if(event.key==='Enter')addClienteItem()">
+    <button class="btn-add-inline" onclick="addClienteItem()">+</button>
+  </div>
+  ${!its.length?'<div class="empty">Sem itens adicionados</div>':''}
+  ${its.map(c=>`<div class="card ${c.feito?'green':''}">
+    <div class="row">
+      <button class="check-box ${c.feito?'checked':''}" onclick="toggleClienteItem(${c.id})">${c.feito?'✓':''}</button>
+      <span class="client-item ${c.feito?'done':''}">${esc(c.texto)}</span>
+      <button class="btn-remove" onclick="removerClienteItem(${c.id})">×</button>
+    </div>
+  </div>`).join('')}`;}
+
+function renderLembretesObra(obra){
+  const ls=obra.lembretes||[];
+  return`
+  <div class="info-box">🔔 Lembretes com data aparecem nos alertas quando faltam 7 dias ou menos</div>
+  <div class="section"><div class="section-title">Novo Lembrete</div>
+    <div class="field"><input id="inp-lem" placeholder="Ex: Confirmar entrega de cimento, ligar ao cliente..."></div>
+    <div class="field"><label>Data</label><input id="inp-lem-data" type="date"></div>
+    <button class="btn-primary" onclick="addLembrete()">+ Adicionar Lembrete</button>
+  </div>
+  ${!ls.length?'<div class="empty">Sem lembretes adicionados</div>':''}
+  ${ls.map(l=>{
+    const d=diasPara(l.data);
+    const cor=d===null?'var(--muted)':d<0?'var(--red)':d===0?'var(--yellow)':'var(--blue-light)';
+    const label=d===null?'':d<0?Math.abs(d)+'d atrasado':d===0?'Hoje':d===1?'Amanhã':d+'d';
+    return`<div class="card ${d!==null&&d<0?'urgente':d===0?'hoje':''}">
+      <div class="row">
+        <div class="flex1">
+          <div style="font-size:13px;font-weight:600">${esc(l.texto)}</div>
+          <div style="font-size:12px;color:${cor};margin-top:3px">${l.data?fmtDate(l.data):''} ${label?'· '+label:''}</div>
+        </div>
+        <button class="btn-remove" onclick="removerLembrete(${l.id})">×</button>
+      </div>
+    </div>`;}).join('')}`;}
+
+// ── ACTIONS ──────────────────────────────────────────────
+function setPagina(p){state.pagina=p;state.pesquisa='';render();}
+function goLista(){state.vista='lista';state.obraId=null;render();}
+function setTab(t){state.tab=t;render();}
+function setPesquisa(v){state.pesquisa=v;render();}
+function setFiltro(f){state.filtro=f;render();}
+function abrirObra(id){state.obraId=id;state.vista='obra';state.tab='info';render();}
+
+function novaObra(){
+  const n={id:Date.now(),cliente:'',morada:'',telefone:'',dataInicio:'',dataFim:'',valorAcordado:'',descricaoObra:'',notas:'',passos:[],materiais:[],fornecedores:[],clienteAssegurar:[],lembretes:[],arquivada:false};
+  state.obras.unshift(n);state.obraId=n.id;state.vista='obra';state.tab='info';saveToStorage();render();
+}
+function apagarObra(){if(!confirm('Apagar esta obra?'))return;state.obras=state.obras.filter(o=>o.id!==state.obraId);saveToStorage();goLista();}
+function arquivarObra(){updateObra({arquivada:true});state.vista='lista';state.pagina='obras';render();}
+function desarquivarObra(){updateObra({arquivada:false});}
+function fieldUpdate(c,v){state.obras=state.obras.map(o=>o.id===state.obraId?{...o,[c]:v}:o);saveToStorage();renderHeader();}
+
+function addPasso(){const i=document.getElementById('inp-passo');if(!i?.value.trim())return;const o=getObra();updateObra({passos:[...(o.passos||[]),{id:Date.now(),texto:i.value.trim(),status:'pendente',notas:''}]});}
+function passoUpdate(id,c,v){const o=getObra();updateObra({passos:o.passos.map(p=>p.id===id?{...p,[c]:v}:p)});}
+function removerPasso(id){const o=getObra();updateObra({passos:o.passos.filter(p=>p.id!==id)});}
+
+function addMaterial(){const n=document.getElementById('inp-mat')?.value.trim();if(!n)return;const o=getObra();updateObra({materiais:[...(o.materiais||[]),{id:Date.now(),nome:n,quantidade:document.getElementById('inp-qtd')?.value||'',unidade:document.getElementById('inp-un')?.value||'',encomendado:false,recebido:false}]});}
+function toggleMaterial(id,c){const o=getObra();updateObra({materiais:o.materiais.map(m=>m.id===id?{...m,[c]:!m[c]}:m)});}
+function removerMaterial(id){const o=getObra();updateObra({materiais:o.materiais.filter(m=>m.id!==id)});}
+
+function addFornecedor(){const n=document.getElementById('inp-forn')?.value.trim();if(!n)return;const o=getObra();updateObra({fornecedores:[...(o.fornecedores||[]),{id:Date.now(),nome:n,servico:document.getElementById('inp-serv')?.value||'',contacto:document.getElementById('inp-cont')?.value||'',dataPresenca:document.getElementById('inp-data')?.value||'',confirmado:false}]});}
+function toggleFornecedor(id){const o=getObra();updateObra({fornecedores:o.fornecedores.map(f=>f.id===id?{...f,confirmado:!f.confirmado}:f)});}
+function removerFornecedor(id){const o=getObra();updateObra({fornecedores:o.fornecedores.filter(f=>f.id!==id)});}
+
+function addClienteItem(){const i=document.getElementById('inp-cli');if(!i?.value.trim())return;const o=getObra();updateObra({clienteAssegurar:[...(o.clienteAssegurar||[]),{id:Date.now(),texto:i.value.trim(),feito:false}]});}
+function toggleClienteItem(id){const o=getObra();updateObra({clienteAssegurar:o.clienteAssegurar.map(c=>c.id===id?{...c,feito:!c.feito}:c)});}
+function removerClienteItem(id){const o=getObra();updateObra({clienteAssegurar:o.clienteAssegurar.filter(c=>c.id!==id)});}
+
+function addLembrete(){const t=document.getElementById('inp-lem')?.value.trim();if(!t)return;const o=getObra();updateObra({lembretes:[...(o.lembretes||[]),{id:Date.now(),texto:t,data:document.getElementById('inp-lem-data')?.value||''}]});}
+function removerLembrete(id){const o=getObra();updateObra({lembretes:o.lembretes.filter(l=>l.id!==id)});}
+
+// ── EMAILS ───────────────────────────────────────────────
+function emailMateriais(){const o=getObra();const ms=o.materiais||[];if(!ms.length)return;const lista=ms.map(m=>`• ${m.nome}${m.quantidade?' — '+m.quantidade+' '+m.unidade:''}`).join('\n');window.location.href=`mailto:?subject=${encodeURIComponent('Encomenda de Material — Obra '+(o.cliente||''))}&body=${encodeURIComponent('Bom dia,\n\nVenho solicitar os seguintes materiais para a obra'+(o.morada?' na '+o.morada:'')+':\n\n'+lista+(o.dataInicio?'\n\nData de início: '+fmtDate(o.dataInicio):'')+'\n\nAgradeço confirmação.\n\nCom os melhores cumprimentos')}`;}
+function emailFornecedores(){const o=getObra();const fs=o.fornecedores||[];if(!fs.length)return;const f=fs.find(x=>!x.confirmado)||fs[0];window.location.href=`mailto:${f.contacto?.includes('@')?f.contacto:''}?subject=${encodeURIComponent('Confirmação de Presença — Obra '+(o.cliente||''))}&body=${encodeURIComponent('Bom dia'+(f.nome?', '+f.nome:'')+',\n\nServico: '+(f.servico||f.nome)+(f.dataPresenca?'\nData: '+fmtDate(f.dataPresenca):'')+'\nObra'+(o.morada?' na '+o.morada:'')+'\n\nAgradeço confirmação.\n\nCom os melhores cumprimentos')}`;}
+function emailCliente(){const o=getObra();const its=o.clienteAssegurar||[];if(!its.length)return;const lista=its.map(c=>(c.feito?'✓':'☐')+' '+c.texto).join('\n');window.location.href=`mailto:?subject=${encodeURIComponent('Checklist da Obra — '+(o.cliente||''))}&body=${encodeURIComponent('Bom dia'+(o.cliente?', '+o.cliente:'')+',\n\nLista de pontos a assegurar'+(o.morada?' para a obra na '+o.morada:'')+':\n\n'+lista+(o.dataInicio?'\n\nData de início: '+fmtDate(o.dataInicio):'')+'\n\nCom os melhores cumprimentos')}`;}
+
+// ── UTILS ────────────────────────────────────────────────
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function fmtDate(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('pt-PT');}catch(e){return d;}}
+
+loadFromStorage();
+render();
+</script>
+</body>
+</html>
